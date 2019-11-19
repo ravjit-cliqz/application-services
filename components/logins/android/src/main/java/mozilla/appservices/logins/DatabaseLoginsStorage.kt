@@ -207,6 +207,13 @@ class DatabaseLoginsStorage(private val dbPath: String) : AutoCloseable, LoginsS
         }
     }
 
+    @Throws(LoginsStorageException::class)
+    override fun rekeyDatabase(newEncryptionKey: String) {
+        return rustCallWithLock { raw, error ->
+            PasswordSyncAdapter.INSTANCE.sync15_passwords_re_key_database(raw, newEncryptionKey, error)
+        }
+    }
+
     @Synchronized
     @Throws(LoginsStorageException::class)
     override fun close() {

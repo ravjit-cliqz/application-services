@@ -68,6 +68,10 @@ void sync15_passwords_wipe_local(Sync15PasswordEngineHandle handle,
 void sync15_passwords_disable_mem_security(Sync15PasswordEngineHandle handle,
                                            Sync15PasswordsError *_Nonnull error);
 
+void sync15_passwords_rekey_database(Sync15PasswordEngineHandle handle,
+                                     char const *_Nonnull new_encryption_key,
+                                     Sync15PasswordsError *_Nonnull error);
+
 void sync15_passwords_reset(Sync15PasswordEngineHandle handle,
                             Sync15PasswordsError *_Nonnull error);
 

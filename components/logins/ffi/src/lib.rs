@@ -99,6 +99,19 @@ pub extern "C" fn sync15_passwords_disable_mem_security(handle: u64, error: &mut
 }
 
 #[no_mangle]
+pub extern "C" fn sync15_passwords_rekey_database(
+    handle: u64,
+    new_encryption_key: FfiStr<'_>,
+    error: &mut ExternError,
+) {
+    log::debug!("sync15_passwords_rekey_database");
+    let new_key = new_encryption_key.as_str();
+    ENGINES.call_with_result(error, handle, |state| -> Result<()> {
+        state.lock().unwrap().rekey_database(new_key)
+    })
+}
+
+#[no_mangle]
 pub extern "C" fn sync15_passwords_sync(
     handle: u64,
     key_id: FfiStr<'_>,
