@@ -30,6 +30,10 @@
 
 - Login records with a `httpRealm` attribute will now have their `usernameField` and `passwordField`
   properties silently cleared, to help ensure data consistency. ([#2158](https://github.com/mozilla/application-services/pull/2158))
+- The Android bindings now collect some basic performance and quality metrics via Glean.
+  Applications that submit telemetry via Glean must request a data review for these metrics
+  before integrating the logins component. See the component README.md for more details.
+  ([#2225](https://github.com/mozilla/application-services/pull/2225))
 
 ### What's new
 
