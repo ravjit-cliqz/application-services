@@ -1,3 +1,33 @@
+# v0.45.0 (_2019-12-05_)
+
+[Full Changelog](https://github.com/mozilla/application-services/compare/v0.44.0...v0.45.0)
+
+## FxA Client
+
+### What's new
+
+- `FirefoxAccount.checkAuthorizationStatus` will check the status of the currently stored refresh token. ([#2332](https://github.com/mozilla/application-services/pull/2332))
+
+## Logins
+
+### Breaking Changes
+
+- Login records with a `httpRealm` attribute will now have their `usernameField` and `passwordField`
+  properties silently cleared, to help ensure data consistency. ([#2158](https://github.com/mozilla/application-services/pull/2158))
+
+### What's new
+
+- Added invalid character checks from Desktop to `LoginsStorage.ensureValid` and introduced `INVALID_LOGIN_ILLEGAL_FIELD_VALUE` error. ([#2262](https://github.com/mozilla/application-services/pull/2262))
+
+## Sync Manager
+
+### Breaking Changes
+
+- When asked to sync all engines, SyncManager will now sync all engines for which a handle has been set.
+  Previously it would sync all known engines, panicking if a handle had not been set for some engine.
+  While *technically* a breaking change, we expect that the new behaviour is almost certainly what
+  consuming applications actually want in practice. ([#2313](https://github.com/mozilla/application-services/pull/2313))
+
 # v0.44.0 (_2019-11-21_)
 
 [Full Changelog](https://github.com/mozilla/application-services/compare/v0.43.1...v0.44.0)
