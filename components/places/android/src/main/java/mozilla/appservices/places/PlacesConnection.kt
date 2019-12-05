@@ -10,13 +10,14 @@ import com.sun.jna.StringArray
 import mozilla.appservices.support.native.toNioDirectBuffer
 import mozilla.appservices.sync15.SyncTelemetryPing
 import org.json.JSONArray
-import org.json.JSONObject
 import org.json.JSONException
+import org.json.JSONObject
+import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import java.lang.ref.WeakReference
 
 /**
  * An implementation of a [PlacesManager] backed by a Rust Places library.
@@ -291,6 +292,18 @@ open class PlacesReaderConnection internal constructor(connHandle: Long) :
         val infoBuffer = rustCall { error ->
             LibPlacesFFI.INSTANCE.places_get_visit_infos(
                     this.handle.get(), start, end, visitTransitionSet(excludeTypes), error)
+        }
+        try {
+            val infos = MsgTypes.HistoryVisitInfos.parseFrom(infoBuffer.asCodedInputStream()!!)
+            return VisitInfo.fromMessage(infos)
+        } finally {
+            LibPlacesFFI.INSTANCE.places_destroy_bytebuffer(infoBuffer)
+        }
+    }
+
+    override fun getTopSitesInfos(limit: Int): List<VisitInfo> {
+        val infoBuffer = rustCall { error ->
+            LibPlacesFFI.INSTANCE.places_get_top_sites_infos(this.handle.get(), limit, error)
         }
         try {
             val infos = MsgTypes.HistoryVisitInfos.parseFrom(infoBuffer.asCodedInputStream()!!)
@@ -689,6 +702,8 @@ interface ReadableHistoryConnection : InterruptibleConnection {
         end: Long = Long.MAX_VALUE,
         excludeTypes: List<VisitType> = listOf()
     ): List<VisitInfo>
+
+    fun getTopSitesInfos(limit: Int): List<VisitInfo>
 
     /**
      * Return a "page" of history results. Each page will have visits in descending order

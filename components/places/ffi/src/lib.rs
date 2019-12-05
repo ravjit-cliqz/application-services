@@ -386,6 +386,21 @@ pub extern "C" fn places_get_visit_infos(
 }
 
 #[no_mangle]
+pub extern "C" fn places_get_top_sites_infos(
+    handle: u64,
+    limit: i32,
+    error: &mut ExternError,
+) -> ByteBuffer {
+    log::debug!("places_get_top_sites_infos");
+    CONNECTIONS.call_with_result(error, handle, |conn| -> places::Result<_> {
+        Ok(storage::history::get_top_sites_infos(
+            conn,
+            limit,
+        )?)
+    })
+}
+
+#[no_mangle]
 pub extern "C" fn places_get_visit_count(
     handle: u64,
     exclude_types: i32,

@@ -27,7 +27,7 @@ NSS_SRC_PATH=${2}
 echo "# Building NSS"
 for i in "${!TARGET_ARCHS[@]}"; do
   DIST=${TARGET_ARCHS_DISTS[${i}]}
-  DIST_DIR=$(abspath "android/${DIST}/nss")
+  DIST_DIR=$(grealpath -m "android/${DIST}/nss")
   if [[ -d "${DIST_DIR}" ]]; then
     echo "${DIST_DIR} already exists. Skipping building nss."
   else
@@ -38,8 +38,8 @@ done
 echo "# Building sqlcipher"
 for i in "${!TARGET_ARCHS[@]}"; do
   DIST=${TARGET_ARCHS_DISTS[${i}]}
-  NSS_DIR=$(abspath "android/${DIST}/nss")
-  DIST_DIR=$(abspath "android/${DIST}/sqlcipher")
+  NSS_DIR=$(grealpath "android/${DIST}/nss")
+  DIST_DIR=$(grealpath "android/${DIST}/sqlcipher")
   if [[ -d "${DIST_DIR}" ]]; then
     echo "${DIST_DIR} already exists. Skipping building sqlcipher."
   else

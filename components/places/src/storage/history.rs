@@ -1098,6 +1098,24 @@ pub fn get_visit_infos(
     Ok(HistoryVisitInfos { infos })
 }
 
+pub fn get_top_sites_infos(
+    db: &PlacesDb,
+    limit: i32,
+) -> Result<HistoryVisitInfos> {
+    let infos = db.query_rows_and_then_named(
+        "SELECT url, title, last_visit_date_local, visit_count_local
+         FROM moz_places
+         WHERE title NOT NULL
+         ORDER BY visit_count_local DESC
+         LIMIT :limit",
+        rusqlite::named_params! {
+            ":limit": limit,
+        },
+        HistoryVisitInfo::from_row
+    )?;
+    Ok(HistoryVisitInfos {infos})
+}
+
 pub fn get_visit_count(db: &PlacesDb, exclude_types: VisitTransitionSet) -> Result<i64> {
     let count = if exclude_types.is_empty() {
         db.query_one::<i64>("SELECT COUNT(*) FROM moz_historyvisits")?

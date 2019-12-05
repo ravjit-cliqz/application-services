@@ -153,6 +153,12 @@ internal interface LibPlacesFFI : Library {
         error: RustError.ByReference
     ): RustBuffer.ByValue
 
+    fun places_get_top_sites_infos(
+        handle: PlacesConnectionHandle,
+        limit: Int,
+        error: RustError.ByReference
+    ): RustBuffer.ByValue
+
     fun places_get_visit_page(
         handle: PlacesConnectionHandle,
         offset: Long,
