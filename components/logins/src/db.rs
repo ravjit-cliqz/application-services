@@ -670,17 +670,6 @@ impl LoginDb {
         let exists = self.exists(id)?;
         let now_ms = util::system_time_ms_i64(SystemTime::now());
 
-        // Directly delete IDs that have not yet been synced to the server
-        self.execute_named(
-            &format!(
-                "DELETE FROM loginsL
-                 WHERE guid = :guid
-                     AND sync_status = {status_new}",
-                status_new = SyncStatus::New as u8
-            ),
-            named_params! { ":guid": id },
-        )?;
-
         // For IDs that have, mark is_deleted and clear sensitive fields
         self.execute_named(
             &format!(
@@ -778,13 +767,6 @@ impl LoginDb {
         let tx = self.unchecked_transaction()?;
         log::info!("Executing wipe on password store!");
         let now_ms = util::system_time_ms_i64(SystemTime::now());
-        self.execute(
-            &format!(
-                "DELETE FROM loginsL WHERE sync_status = {new}",
-                new = SyncStatus::New as u8
-            ),
-            NO_PARAMS,
-        )?;
         scope.err_if_interrupted()?;
         self.execute_named(
             &format!(
@@ -1177,17 +1159,16 @@ mod tests {
     #[test]
     fn test_check_valid_with_no_dupes_with_dupe() {
         let db = LoginDb::open_in_memory(Some("testing")).unwrap();
-        let login = db
-            .add(Login {
-                guid: "dummy_000001".into(),
-                form_submit_url: Some("https://www.example.com/submit".into()),
-                hostname: "https://www.example.com".into(),
-                http_realm: None,
-                username: "test".into(),
-                password: "test".into(),
-                ..Login::default()
-            })
-            .unwrap();
+        db.add(Login {
+            guid: "dummy_000001".into(),
+            form_submit_url: Some("https://www.example.com/submit".into()),
+            hostname: "https://www.example.com".into(),
+            http_realm: None,
+            username: "test".into(),
+            password: "test".into(),
+            ..Login::default()
+        })
+        .unwrap();
 
         let duplicate_login_check = db.check_valid_with_no_dupes(&Login {
             guid: Guid::empty(),
@@ -1199,7 +1180,6 @@ mod tests {
             ..Login::default()
         });
 
-        db.delete(login.guid_str()).unwrap();
         assert!(&duplicate_login_check.is_err());
         assert_eq!(
             &duplicate_login_check.unwrap_err().to_string(),
@@ -1210,17 +1190,16 @@ mod tests {
     #[test]
     fn test_check_valid_with_no_dupes_with_unique_login() {
         let db = LoginDb::open_in_memory(Some("testing")).unwrap();
-        let login = db
-            .add(Login {
-                guid: "dummy_000001".into(),
-                form_submit_url: Some("https://www.example.com/submit".into()),
-                hostname: "https://www.example.com".into(),
-                http_realm: None,
-                username: "test".into(),
-                password: "test".into(),
-                ..Login::default()
-            })
-            .unwrap();
+        db.add(Login {
+            guid: "dummy_000001".into(),
+            form_submit_url: Some("https://www.example.com/submit".into()),
+            hostname: "https://www.example.com".into(),
+            http_realm: None,
+            username: "test".into(),
+            password: "test".into(),
+            ..Login::default()
+        })
+        .unwrap();
 
         let unique_login_check = db.check_valid_with_no_dupes(&Login {
             guid: Guid::empty(),
@@ -1232,7 +1211,40 @@ mod tests {
             ..Login::default()
         });
 
-        db.delete(login.guid_str()).unwrap();
         assert!(&unique_login_check.is_ok())
+    }
+
+    #[test]
+    fn test_delete() {
+        let db = LoginDb::open_in_memory(Some("testing")).unwrap();
+        let _login = db
+            .add(Login {
+                hostname: "https://www.example.com".into(),
+                http_realm: Some("https://www.example.com".into()),
+                username: "test_user".into(),
+                password: "test_password".into(),
+                ..Login::default()
+            })
+            .unwrap();
+
+        assert!(db.delete(_login.guid_str()).unwrap());
+        assert!(!db.exists(_login.guid_str()).unwrap());
+    }
+
+    #[test]
+    fn test_wipe() {
+        let db = LoginDb::open_in_memory(Some("testing")).unwrap();
+        let _login = db
+            .add(Login {
+                hostname: "https://www.example.com".into(),
+                http_realm: Some("https://www.example.com".into()),
+                username: "test_user_1".into(),
+                password: "test_password_1".into(),
+                ..Login::default()
+            })
+            .unwrap();
+
+        assert!(db.wipe(&db.begin_interrupt_scope()).is_ok());
+        assert!(!db.exists(_login.guid_str()).unwrap());
     }
 }
